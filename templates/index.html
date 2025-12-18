@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Drawful</title>
+    <link rel="stylesheet" href="https://use.typekit.net/hbi1lzm.css">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'futura-pt', serif;
+            background: white;
+            min-height: 100vh;
+            padding: 20px;
+            padding-top: 70px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            touch-action: manipulation;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+        h1 {
+            color: #ff4f00;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            font-family: 'futura-pt', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: -0.5px;
+        }
+        .screen { display: none; }
+        .screen.active { display: block; }
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid rgba(0,0,0,0.1);
+            font-size: 16px;
+            font-family: 'futura-pt', serif;
+            margin-bottom: 15px;
+            background: rgba(255,255,255,0.8);
+            transition: all 0.2s;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--player-light, #ff4f00);
+            background: white;
+            box-shadow: 0 0 0 3px var(--player-light-10, rgba(255, 79, 0, 0.1));
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background: #ff4f00;
+            color: white;
+            border: none;
+            font-size: 17px;
+            font-family: 'futura-pt', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+            letter-spacing: 0.5px;
+        }
+        button:hover { 
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px var(--player-light-40, rgba(255, 79, 0, 0.4));
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        button:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .tool-btn {
+            background: white;
+            color: #1f2937;
+            border: 2px solid rgba(0,0,0,0.1);
+            font-size: 28px;
+            padding: 12px;
+            min-width: 60px;
+            width: auto;
+        }
+        .tool-btn:hover {
+            border-color: var(--player-light, #ff4f00);
+            background: var(--player-light-05, rgba(255, 79, 0, 0.05));
+        }
+        .tool-btn.active { 
+            background: var(--player-light, #ff4f00);
+            color: white;
+            border-color: var(--player-light, #ff4f00);
+            box-shadow: 0 0 0 3px var(--player-light-20, rgba(255, 79, 0, 0.2));
+        }
+        .players-list {
+            background: var(--player-light-05, rgba(255, 79, 0, 0.05));
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--player-light-10, rgba(255, 79, 0, 0.1));
+        }
+        .player-item {
+            background: white;
+            padding: 12px 18px;
+            margin: 8px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(0,0,0,0.06);
+            transition: all 0.2s;
+        }
+        .player-item:hover {
+            transform: translateX(4px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        canvas {
+            border: 2px solid var(--player-light-30, rgba(255, 79, 0, 0.3));
+            background: white;
+            display: block;
+            margin: 20px auto;
+            touch-action: none;
+            max-width: min(600px, 100%);
+            max-height: 80vh;
+            width: 100%;
+            height: auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .drawing-tools {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        .color-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+            padding: 0;
+            min-width: unset;
+        }
+        .color-btn.active {
+            border: 4px solid var(--player-light, #ff4f00);
+            box-shadow: 0 0 0 4px var(--player-light-20, rgba(255, 79, 0, 0.2));
+            transform: scale(1.1);
+        }
+        .prompt-display {
+            background: var(--player-light-10, rgba(255, 79, 0, 0.1));
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--player-light, #ff4f00);
+            border: 2px solid var(--player-light-20, rgba(255, 79, 0, 0.2));
+            letter-spacing: -0.5px;
+        }
+        .drawing-display {
+            max-width: 100%;
+            border: 2px solid var(--player-light-30, rgba(255, 79, 0, 0.3));
+            margin: 20px auto;
+            display: block;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .answer-btn {
+            background: white;
+            color: #1f2937;
+            margin: 5px 0;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        .answer-btn:hover { 
+            background: var(--player-light-05, rgba(255, 79, 0, 0.05));
+            border-color: var(--player-light-30, rgba(255, 79, 0, 0.3));
+        }
+        .vote-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            background: white;
+            border: 2px solid rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .vote-option:hover {
+            border-color: var(--player-light-30, rgba(255, 79, 0, 0.3));
+            background: var(--player-light-05, rgba(255, 79, 0, 0.05));
+        }
+        .vote-option.selected {
+            background: var(--player-light-10, rgba(255, 79, 0, 0.1));
+            border-color: var(--player-light, #ff4f00);
+            border-width: 3px;
+        }
+        .vote-option-text {
+            flex: 1;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        .like-btn {
+            font-size: 24px;
+            background: none;
+            border: 2px solid rgba(0,0,0,0.15);
+            border-radius: 50%;
+            cursor: pointer;
+            padding: 8px 12px;
+            transition: all 0.2s;
+            width: auto;
+            min-width: unset;
+            color: #e63946;
+        }
+        .like-btn:hover {
+            transform: scale(1.2);
+            border-color: #e63946;
+            background: rgba(230, 57, 70, 0.05);
+        }
+        .like-btn.liked {
+            transform: scale(1.3);
+            background: rgba(230, 57, 70, 0.1);
+            border-color: #e63946;
+        }
+        .scores {
+            background: var(--player-light-05, rgba(255, 79, 0, 0.05));
+            padding: 20px;
+            border: 1px solid var(--player-light-10, rgba(255, 79, 0, 0.1));
+        }
+        .score-item {
+            padding: 15px 20px;
+            margin: 10px 0;
+            background: white;
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+            border: 1px solid rgba(0,0,0,0.06);
+            transition: all 0.2s;
+            font-weight: 500;
+            letter-spacing: -0.3px;
+        }
+        .score-item:hover {
+            transform: translateX(4px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .winner { 
+            background: var(--player-light-10, rgba(255, 79, 0, 0.1));
+            border: 2px solid var(--player-light, #ff4f00);
+            font-weight: 700;
+        }
+        .status-text {
+            text-align: center;
+            padding: 15px;
+            background: var(--player-light-10, rgba(255, 79, 0, 0.1));
+            margin-bottom: 20px;
+            color: var(--player-light, #ff4f00);
+            font-weight: 600;
+            border: 2px solid var(--player-light-20, rgba(255, 79, 0, 0.2));
+            letter-spacing: -0.3px;
+        }
+        .waiting {
+            text-align: center;
+            padding: 30px;
+            color: #6b7280;
+        }
+        .waiting .owl {
+            font-size: 120px;
+            margin: 20px 0;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        .qr-code {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border: 1px solid rgba(0,0,0,0.08);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .qr-code img {
+            max-width: 200px;
+            height: auto;
+            border: 2px solid var(--player-light-30, rgba(255, 79, 0, 0.3));
+        }
+        .color-shade {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #333;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .color-shade:hover {
+            transform: scale(1.1);
+        }
+        .color-shade.active {
+            border: 4px solid #000;
+            transform: scale(1.15);
+        }
+        .timer-display {
+            font-size: 32px;
+            font-weight: 700;
+            text-align: center;
+            padding: 15px;
+            background: var(--player-light-10, rgba(255, 79, 0, 0.1));
+            margin-bottom: 10px;
+            color: var(--player-light, #ff4f00);
+            border: 2px solid var(--player-light-20, rgba(255, 79, 0, 0.2));
+            letter-spacing: -0.5px;
+        }
+        .timer-display.warning {
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { background: rgba(239, 68, 68, 0.15); border-color: #ef4444; color: #dc2626; }
+            50% { background: rgba(239, 68, 68, 0.25); border-color: #dc2626; }
+        }
+        .correct-answer-reveal {
+            background: var(--player-light, #ff4f00);
+            color: white;
+            padding: 20px 30px;
+            margin: 20px auto;
+            font-size: 28px;
+            font-family: 'futura-pt', serif;
+            font-weight: 700;
+            text-align: center;
+            box-shadow: 0 8px 24px var(--player-light-40, rgba(255, 79, 0, 0.4));
+            animation: revealFlash 0.8s ease-out;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        @keyframes revealFlash {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .reveal-drawing {
+            max-width: 400px;
+            margin: 20px auto;
+            display: block;
+            border: 3px solid var(--player-light-30, rgba(255, 79, 0, 0.3));
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .user-name-box {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: var(--player-light, #ff4f00);
+            color: white;
+            padding: 10px 20px;
+            font-family: 'futura-pt', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+        .title-card {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--player-light, #ff4f00);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            animation: fadeOut 0.5s ease-out 2.5s forwards;
+        }
+        .title-card.active {
+            display: flex;
+        }
+        .title-card h2 {
+            color: white;
+            font-family: 'futura-pt', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 4em;
+            text-align: center;
+            animation: titlePulse 0.6s ease-out;
+        }
+        @keyframes titlePulse {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            to { opacity: 0; }
+        }
+        .game-url-text {
+            color: var(--player-light, #ff4f00);
+        }
+        .most-liked-section {
+            border-top: 2px solid var(--player-light-20, rgba(255, 79, 0, 0.2));
+        }
+        .most-liked-header {
+            color: var(--player-light, #ff4f00);
+        }
+
+        /* Mobile adjustments: reduce side margins and padding for small screens */
+        @media (max-width: 600px) {
+            body {
+                padding: 12px;
+                padding-top: 70px;
+            }
+            .container {
+                padding: 16px;
+                margin: 0 8px;
+                box-shadow: 0 6px 20px rgba(0,0,0,0.10);
+            }
+            h1 {
+                font-size: 2em;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <!-- User Name Display -->
+    <div id="user-name-box" class="user-name-box" style="display: none;"></div>
+    
+    <!-- Title Card -->
+    <div id="title-card" class="title-card">
+        <h2 id="title-card-text"></h2>
+    </div>
+    
+    <div class="container">
+        <h1>Drawful!</h1>
+        
+        <!-- Join Screen -->
+        <div id="join-screen" class="screen active">
+            <input type="text" id="player-name" placeholder="Enter your name" maxlength="20">
+            <button onclick="joinGame()">Join Game</button>
+            <div class="waiting">Waiting to join...</div>
+        </div>
+
+        <!-- Lobby Screen -->
+        <div id="lobby-screen" class="screen">
+            <div class="status-text">Lobby - Waiting for players</div>
+            <div class="players-list">
+                <h3 style="margin-bottom: 15px;">Players:</h3>
+                <div id="lobby-players"></div>
+            </div>
+            <button id="start-btn" onclick="startGame()" disabled>Start Game (Need 3+ players)</button>
+            <div class="qr-code">
+                <p style="margin-bottom: 10px; color: #6b7280;">Scan to join:</p>
+                <img id="qr-code-img" src="/qr_code" alt="QR Code">
+                <p style="font-weight: bold; font-size: 14px; margin-top: 10px;" id="game-url" class="game-url-text"></p>
+            </div>
+        </div>
+
+        <!-- Drawing Screen -->
+        <div id="drawing-screen" class="screen">
+            <div class="status-text">Round <span id="round-num">1</span>/3 - Drawing Phase</div>
+            <div class="prompt-display" id="draw-prompt"></div>
+            <div class="timer-display" id="timer-display">1:00</div>
+            <canvas id="draw-canvas" width="600" height="600"></canvas>
+            <div class="drawing-tools">
+                <button class="color-btn" onclick="setTool('light')" id="light-btn" style="background: white; border-color: #ddd;" title="Light Color"></button>
+                <button class="color-btn active" onclick="setTool('dark')" id="dark-btn" style="background: #1f2937;" title="Dark Color"></button>
+                <button class="tool-btn active" onclick="setTool('pen')" id="pen-btn" title="Pen">🖊️</button>
+                <button class="tool-btn" onclick="setTool('fill')" title="Fill">🪣</button>
+                <button class="tool-btn" onclick="setTool('eraser')" title="Eraser">🧹</button>
+                <button class="tool-btn" onclick="undoCanvas()" title="Undo">↩️</button>
+                <input type="range" id="size-slider" min="1" max="20" value="12" style="flex: 1; min-width: 60px;" title="Brush Size">
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button class="tool-btn" onclick="clearCanvas()" style="flex: 1; margin: 0;">🗑️ Clear All</button>
+                <button class="tool-btn" onclick="addTime()" style="flex: 1; margin: 0;">⏱️ +30s</button>
+            </div>
+            <button onclick="submitDrawing()" style="margin-top: 15px;">Submit Drawing</button>
+        </div>
+
+        <!-- Waiting Screen -->
+        <div id="waiting-screen" class="screen">
+            <div class="waiting">
+                <div class="owl">🦉</div>
+                <h2>Waiting for other players...</h2>
+                <p style="margin-top: 20px;" id="waiting-message"></p>
+            </div>
+        </div>
+
+        <!-- Guessing Screen -->
+        <div id="guessing-screen" class="screen">
+            <div class="status-text">Round <span id="guess-round-num">1</span>/3 - Guessing Phase</div>
+            <div class="timer-display" id="guess-timer-display">0:20</div>
+            <img id="guess-image" class="drawing-display">
+            <input type="text" id="guess-input" placeholder="What is this drawing?" maxlength="50">
+            <button onclick="submitGuess()">Submit Guess</button>
+        </div>
+
+        <!-- Voting Screen -->
+        <div id="voting-screen" class="screen">
+            <div class="status-text">Round <span id="vote-round-num">1</span>/3 - Vote for the REAL caption & like your favorites! 👍</div>
+            <img id="vote-image" class="drawing-display">
+            <div id="vote-options"></div>
+            <button onclick="submitVoteWithLikes()" id="submit-vote-btn" disabled>Submit Vote</button>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-screen" class="screen">
+            <div class="status-text">Round <span id="results-round-num">1</span>/3 - Results</div>
+            <div id="answer-reveal-container" style="display: none;">
+                <div class="correct-answer-reveal" id="correct-answer-text">THE REAL PROMPT </div>
+                <img id="reveal-drawing" class="reveal-drawing">
+            </div>
+            <div class="scores" id="round-scores"></div>
+            <button onclick="continueToNext()">Continue</button>
+        </div>
+
+        <!-- Final Screen -->
+        <div id="final-screen" class="screen">
+            <div class="status-text">🏆 Final Results 🏆</div>
+            <div class="scores" id="final-scores"></div>
+            <div style="margin-top: 30px; padding-top: 30px;" class="most-liked-section">
+                <h2 style="margin-bottom: 15px;" class="most-liked-header">❤️ Most Liked ❤️</h2>
+                <div class="scores" id="final-likes"></div>
+            </div>
+            <button onclick="playAgain()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        let playerId = null;
+        let playerName = '';
+        let currentTool = 'pen';
+        let lastDrawingTool = 'dark'; // Track last drawing tool for fill color
+        let isDrawing = false;
+        let ctx = null;
+        let playerColors = { light: '#000000', dark: '#000000' };
+        let drawingTimer = null;
+        let timeRemaining = 60;
+        let selectedVote = null;
+        let likedOptions = new Set();
+        let isCurrentArtist = false; // Track if player is artist for current voting
+        let undoStack = []; // Stack to store canvas states for undo
+
+        document.getElementById('game-url').textContent = window.location.href;
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function joinGame() {
+            playerName = document.getElementById('player-name').value.trim();
+            if (playerName) {
+                socket.emit('join', { name: playerName });
+            }
+        }
+
+        function startGame() {
+            socket.emit('start_game');
+        }
+
+        function setTool(tool) {
+            currentTool = tool;
+            if (tool === 'light' || tool === 'dark') {
+                lastDrawingTool = tool; // Remember last drawing color for fill
+                // Update color button active states
+                document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById(tool + '-btn').classList.add('active');
+                // Activate pen tool when selecting a color
+                document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById('pen-btn').classList.add('active');
+                currentTool = 'pen'; // Switch to pen when selecting color
+            } else if (tool === 'pen') {
+                // Use last selected drawing color
+                currentTool = lastDrawingTool;
+                document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById('pen-btn').classList.add('active');
+            } else {
+                // Tool buttons (fill, eraser)
+                document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+                event.target.classList.add('active');
+            }
+        }
+
+        function startTimer() {
+            timeRemaining = 60;
+            updateTimerDisplay();
+            // Timer is now controlled by server
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            const display = document.getElementById('timer-display');
+            display.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            if (timeRemaining <= 10) {
+                display.classList.add('warning');
+            } else {
+                display.classList.remove('warning');
+            }
+        }
+
+        function updateGuessTimerDisplay() {
+            const seconds = timeRemaining;
+            const display = document.getElementById('guess-timer-display');
+            display.textContent = `0:${seconds.toString().padStart(2, '0')}`;
+            if (timeRemaining <= 5) {
+                display.classList.add('warning');
+            } else {
+                display.classList.remove('warning');
+            }
+        }
+
+        function addTime() {
+            socket.emit('add_time');
+        }
+
+        function stopTimer() {
+            // Timer is controlled by server
+        }
+
+        function saveCanvasState() {
+            const canvas = document.getElementById('draw-canvas');
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            undoStack.push(imageData);
+            // Limit undo stack to 20 states to prevent memory issues
+            if (undoStack.length > 20) {
+                undoStack.shift();
+            }
+        }
+
+        function undoCanvas() {
+            if (undoStack.length > 0) {
+                const canvas = document.getElementById('draw-canvas');
+                const previousState = undoStack.pop();
+                ctx.putImageData(previousState, 0, 0);
+            }
+        }
+
+        function clearCanvas() {
+            // Save state before clearing
+            saveCanvasState();
+            const canvas = document.getElementById('draw-canvas');
+            ctx = canvas.getContext('2d');
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function initCanvas() {
+            const canvas = document.getElementById('draw-canvas');
+            ctx = canvas.getContext('2d');
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            undoStack = []; // Clear undo stack for new drawing
+
+            function getPos(e) {
+                const rect = canvas.getBoundingClientRect();
+                const touch = e.touches ? e.touches[0] : e;
+                return {
+                    x: (touch.clientX - rect.left) * (canvas.width / rect.width),
+                    y: (touch.clientY - rect.top) * (canvas.height / rect.height)
+                };
+            }
+
+            function startDraw(e) {
+                e.preventDefault();
+                const pos = getPos(e);
+                
+                if (currentTool === 'fill') {
+                    // Save current state for undo
+                    saveCanvasState();
+                    
+                    // Flood fill algorithm using last selected drawing color
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const targetColor = getPixelColor(imageData, Math.floor(pos.x), Math.floor(pos.y));
+                    
+                    // Use last selected drawing tool color for fill
+                    let fillColor;
+                    if (lastDrawingTool === 'light') {
+                        fillColor = hexToRgb(playerColors.light);
+                    } else {
+                        fillColor = hexToRgb(playerColors.dark);
+                    }
+                    
+                    if (colorsMatch(targetColor, fillColor, 0)) {
+                        return; // Don't fill if same color (exact match)
+                    }
+                    
+                    floodFill(imageData, Math.floor(pos.x), Math.floor(pos.y), targetColor, fillColor);
+                    ctx.putImageData(imageData, 0, 0);
+                } else {
+                    // Save current state for undo
+                    saveCanvasState();
+                    isDrawing = true;
+                    ctx.beginPath();
+                    ctx.moveTo(pos.x, pos.y);
+                }
+            }
+
+            function draw(e) {
+                if (!isDrawing) return;
+                e.preventDefault();
+                const pos = getPos(e);
+                const size = document.getElementById('size-slider').value;
+                
+                let color;
+                if (currentTool === 'eraser') {
+                    color = 'white';
+                } else if (currentTool === 'light' || lastDrawingTool === 'light') {
+                    color = playerColors.light;
+                } else {
+                    color = playerColors.dark;
+                }
+                
+                ctx.lineWidth = size;
+                ctx.lineCap = 'round';
+                ctx.strokeStyle = color;
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(pos.x, pos.y);
+            }
+
+            function stopDraw() {
+                isDrawing = false;
+                ctx.beginPath();
+            }
+
+            canvas.addEventListener('mousedown', startDraw);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDraw);
+            canvas.addEventListener('touchstart', startDraw);
+            canvas.addEventListener('touchmove', draw);
+            canvas.addEventListener('touchend', stopDraw);
+        }
+
+        // Flood fill helper functions
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16),
+                a: 255
+            } : null;
+        }
+
+        function getPixelColor(imageData, x, y) {
+            const index = (Math.floor(y) * imageData.width + Math.floor(x)) * 4;
+            return {
+                r: imageData.data[index],
+                g: imageData.data[index + 1],
+                b: imageData.data[index + 2],
+                a: imageData.data[index + 3]
+            };
+        }
+
+        function colorsMatch(a, b, tolerance = 50) {
+            // Use tolerance to handle anti-aliasing at edges
+            return Math.abs(a.r - b.r) <= tolerance && 
+                   Math.abs(a.g - b.g) <= tolerance && 
+                   Math.abs(a.b - b.b) <= tolerance && 
+                   Math.abs(a.a - b.a) <= tolerance;
+        }
+
+        function floodFill(imageData, x, y, targetColor, fillColor) {
+            const width = imageData.width;
+            const height = imageData.height;
+            const stack = [[Math.floor(x), Math.floor(y)]];
+            const visited = new Set();
+            
+            while (stack.length > 0) {
+                const [cx, cy] = stack.pop();
+                const key = `${cx},${cy}`;
+                
+                if (visited.has(key) || cx < 0 || cx >= width || cy < 0 || cy >= height) {
+                    continue;
+                }
+                
+                visited.add(key);
+                const currentColor = getPixelColor(imageData, cx, cy);
+                
+                if (!colorsMatch(currentColor, targetColor)) {
+                    continue;
+                }
+                
+                const index = (cy * width + cx) * 4;
+                imageData.data[index] = fillColor.r;
+                imageData.data[index + 1] = fillColor.g;
+                imageData.data[index + 2] = fillColor.b;
+                imageData.data[index + 3] = fillColor.a;
+                
+                // Fill in 4 cardinal directions
+                stack.push([cx + 1, cy]);
+                stack.push([cx - 1, cy]);
+                stack.push([cx, cy + 1]);
+                stack.push([cx, cy - 1]);
+                
+                // Fill in 4 diagonal directions to expand reach
+                stack.push([cx + 1, cy + 1]);
+                stack.push([cx + 1, cy - 1]);
+                stack.push([cx - 1, cy + 1]);
+                stack.push([cx - 1, cy - 1]);
+                
+                // Expand reach by 2 more pixels in cardinal directions
+                stack.push([cx + 2, cy]);
+                stack.push([cx - 2, cy]);
+                stack.push([cx, cy + 2]);
+                stack.push([cx, cy - 2]);
+                
+                // Expand reach by 3 pixels in cardinal directions
+                stack.push([cx + 3, cy]);
+                stack.push([cx - 3, cy]);
+                stack.push([cx, cy + 3]);
+                stack.push([cx, cy - 3]);
+            }
+        }
+
+        function submitDrawing() {
+            stopTimer();
+            const canvas = document.getElementById('draw-canvas');
+            const imageData = canvas.toDataURL();
+            socket.emit('submit_drawing', { image: imageData });
+            showScreen('waiting-screen');
+            document.getElementById('waiting-message').textContent = 'Waiting for others to finish drawing...';
+        }
+
+        function submitGuess() {
+            const guess = document.getElementById('guess-input').value.trim();
+            if (guess) {
+                socket.emit('submit_guess', { guess: guess });
+                document.getElementById('guess-input').value = '';
+                showScreen('waiting-screen');
+                document.getElementById('waiting-message').textContent = 'Waiting for others to guess...';
+            }
+        }
+
+        socket.on('duplicate_guess', (data) => {
+            alert(data.message);
+            showScreen('guessing-screen');
+        });
+
+        function nextRound() {
+            socket.emit('next_round');
+        }
+
+        function continueToNext() {
+            socket.emit('continue_to_next');
+            showScreen('waiting-screen');
+            document.getElementById('waiting-message').textContent = 'Waiting for others to continue...';
+        }
+
+        function playAgain() {
+            socket.emit('play_again');
+        }
+
+        function showTitleCard(text) {
+            const titleCard = document.getElementById('title-card');
+            const titleText = document.getElementById('title-card-text');
+            titleText.textContent = text;
+            titleCard.classList.add('active');
+            setTimeout(() => {
+                titleCard.classList.remove('active');
+            }, 3000);
+        }
+
+        // Socket events
+        socket.on('game_in_progress', () => {
+            alert('Sorry, you cannot join because the game has already started. Please wait for the next round!');
+            document.getElementById('join-name').value = '';
+        });
+
+        socket.on('joined', (data) => {
+            playerId = data.player_id;
+            playerColors = data.colors;
+            playerName = document.getElementById('player-name').value.trim();
+            // Set CSS variables for player colors
+            document.documentElement.style.setProperty('--player-light', playerColors.light);
+            document.documentElement.style.setProperty('--player-dark', playerColors.dark);
+            // Set opacity variants
+            document.documentElement.style.setProperty('--player-light-05', `${playerColors.light}0D`);
+            document.documentElement.style.setProperty('--player-light-10', `${playerColors.light}1A`);
+            document.documentElement.style.setProperty('--player-light-20', `${playerColors.light}33`);
+            document.documentElement.style.setProperty('--player-light-30', `${playerColors.light}4D`);
+            document.documentElement.style.setProperty('--player-light-40', `${playerColors.light}66`);
+
+            // Set DRAWFUL text (h1) color
+            document.querySelectorAll('h1').forEach(h1 => {
+                h1.style.color = playerColors.light;
+            });
+
+            // Set all button backgrounds and text color
+            document.querySelectorAll('button').forEach(btn => {
+                btn.style.background = playerColors.light;
+                btn.style.color = playerColors.dark;
+                btn.style.borderColor = playerColors.dark;
+            });
+
+            // Update user name box
+            const userNameBox = document.getElementById('user-name-box');
+            userNameBox.style.background = playerColors.light;
+            userNameBox.style.color = playerColors.dark;
+            userNameBox.textContent = playerName;
+            userNameBox.style.display = 'block';
+
+            // Update title card
+            document.getElementById('title-card').style.background = playerColors.light;
+            document.querySelectorAll('.title-card h2').forEach(h2 => {
+                h2.style.color = playerColors.dark;
+            });
+
+            // Update all status-text elements
+            document.querySelectorAll('.status-text').forEach(el => {
+                el.style.background = `${playerColors.light}20`;
+                el.style.color = playerColors.light;
+                el.style.borderColor = `${playerColors.light}40`;
+            });
+
+            // Update all prompt-display elements
+            document.querySelectorAll('.prompt-display').forEach(el => {
+                el.style.background = `${playerColors.light}20`;
+                el.style.color = playerColors.light;
+                el.style.borderColor = `${playerColors.light}40`;
+            });
+
+            // Update all timer-display elements
+            document.querySelectorAll('.timer-display').forEach(el => {
+                el.style.background = `${playerColors.light}20`;
+                el.style.color = playerColors.light;
+                el.style.borderColor = `${playerColors.light}40`;
+            });
+
+            // Update game URL text
+            const gameUrl = document.getElementById('game-url');
+            if (gameUrl) gameUrl.style.color = playerColors.light;
+
+            // Update color button active state border
+            document.querySelectorAll('.color-btn.active').forEach(btn => {
+                btn.style.borderColor = playerColors.light;
+                btn.style.boxShadow = `0 0 0 4px ${playerColors.light}40`;
+            });
+
+            showScreen('lobby-screen');
+        });
+
+        socket.on('update_lobby', (data) => {
+            const playersList = document.getElementById('lobby-players');
+            playersList.innerHTML = '';
+            Object.values(data.players).forEach(player => {
+                const div = document.createElement('div');
+                div.className = 'player-item';
+                div.innerHTML = `<span>${player.name}</span>`;
+                playersList.appendChild(div);
+            });
+            
+            const startBtn = document.getElementById('start-btn');
+            startBtn.disabled = Object.keys(data.players).length < 2;
+        });
+
+        socket.on('game_started', (data) => {
+            const roundNum = data.round + 1;
+            document.getElementById('round-num').textContent = roundNum;
+            document.getElementById('guess-round-num').textContent = roundNum;
+            document.getElementById('vote-round-num').textContent = roundNum;
+            document.getElementById('results-round-num').textContent = roundNum;
+            showTitleCard('Drawing Phase');
+        });
+
+        socket.on('your_turn_draw', (data) => {
+            setTimeout(() => {
+                showScreen('drawing-screen');
+                document.getElementById('draw-prompt').textContent = `"${data.prompt}"`;
+                const roundNum = data.round + 1;
+                document.getElementById('round-num').textContent = roundNum;
+                document.getElementById('guess-round-num').textContent = roundNum;
+                document.getElementById('vote-round-num').textContent = roundNum;
+                document.getElementById('results-round-num').textContent = roundNum;
+                initCanvas();
+                startTimer();
+            }, 3000);
+        });
+
+        socket.on('timer_tick', (data) => {
+            timeRemaining = data.time;
+            updateTimerDisplay();
+        });
+
+        socket.on('timer_expired', () => {
+            stopTimer();
+            submitDrawing();
+        });
+
+        socket.on('show_guessing_phase', () => {
+            showTitleCard('Guessing Phase');
+        });
+
+        socket.on('show_voting_phase', () => {
+            showTitleCard('Voting Phase');
+        });
+
+        socket.on('your_turn_guess', (data) => {
+            setTimeout(() => {
+                showScreen('guessing-screen');
+                document.getElementById('guess-image').src = data.image;
+                timeRemaining = 15;
+                updateGuessTimerDisplay();
+            }, 3000);
+        });
+
+        socket.on('guess_timer_tick', (data) => {
+            timeRemaining = data.time;
+            updateGuessTimerDisplay();
+        });
+
+        socket.on('guess_timer_expired', () => {
+            const guess = document.getElementById('guess-input').value.trim();
+            // Always submit whatever text is in the input (even if empty)
+            if (guess) {
+                socket.emit('submit_guess', { guess: guess });
+            } else {
+                socket.emit('guess_time_up');
+            }
+            document.getElementById('guess-input').value = '';
+            showScreen('waiting-screen');
+            document.getElementById('waiting-message').textContent = 'Waiting for others...';
+        });
+
+        socket.on('your_turn_vote', (data) => {
+            // Check if this player is the artist
+            isCurrentArtist = playerId === data.artist_id;
+            
+            // After 3 seconds (title card time), show voting screen
+            setTimeout(() => {
+                showScreen('voting-screen');
+                document.getElementById('vote-image').src = data.image;
+                const optionsDiv = document.getElementById('vote-options');
+                optionsDiv.innerHTML = '';
+                selectedVote = null;
+                likedOptions = new Set();
+                
+                // Update submit button for artists
+                const submitBtn = document.getElementById('submit-vote-btn');
+                if (isCurrentArtist) {
+                    submitBtn.disabled = false; // Enable for submitting likes
+                    submitBtn.textContent = 'Submit Likes';
+                    submitBtn.style.opacity = '';
+                    submitBtn.style.cursor = '';
+                } else {
+                    submitBtn.disabled = true; // Still disabled until selection
+                    submitBtn.textContent = 'Submit Vote';
+                    submitBtn.style.opacity = '';
+                    submitBtn.style.cursor = '';
+                }
+                
+                data.options.forEach((option, index) => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.className = 'vote-option';
+                    optionDiv.dataset.text = option.text;
+                    
+                    const textSpan = document.createElement('span');
+                    textSpan.className = 'vote-option-text';
+                    textSpan.textContent = option.text;
+                    
+                    const likeBtn = document.createElement('button');
+                    likeBtn.className = 'like-btn';
+                    likeBtn.innerHTML = '♡'; // Empty heart
+                    likeBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        toggleLike(option.text, likeBtn);
+                    };
+                    
+                    // Only allow non-artists to vote
+                    if (!isCurrentArtist) {
+                        optionDiv.onclick = () => selectVote(option.text, optionDiv);
+                    }
+                    
+                    optionDiv.appendChild(textSpan);
+                    optionDiv.appendChild(likeBtn);
+                    optionsDiv.appendChild(optionDiv);
+                });
+            }, 3000);
+        });
+
+        function selectVote(text, element) {
+            // Prevent artists from voting
+            if (isCurrentArtist) return;
+            
+            selectedVote = text;
+            document.querySelectorAll('.vote-option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            document.getElementById('submit-vote-btn').disabled = false;
+        }
+
+        function toggleLike(text, button) {
+            if (likedOptions.has(text)) {
+                likedOptions.delete(text);
+                button.innerHTML = '♡'; // Empty heart
+                button.classList.remove('liked');
+            } else {
+                likedOptions.add(text);
+                button.innerHTML = '♥'; // Filled heart
+                button.classList.add('liked');
+            }
+        }
+
+        function submitVoteWithLikes() {
+            if (isCurrentArtist) {
+                // Artist submits likes (always, even if empty)
+                socket.emit('submit_likes_only', {
+                    likes: Array.from(likedOptions)
+                });
+                showScreen('waiting-screen');
+                document.getElementById('waiting-message').textContent = 'Waiting for others to vote...';
+            } else if (selectedVote) {
+                // Non-artists submit vote and likes
+                socket.emit('submit_vote', { 
+                    vote: selectedVote,
+                    likes: Array.from(likedOptions)
+                });
+                showScreen('waiting-screen');
+                document.getElementById('waiting-message').textContent = 'Waiting for others to vote...';
+            }
+        }
+
+        // When voting phase ends, auto-submit any likes the player has selected
+        socket.on('auto_submit_likes', () => {
+            if (likedOptions.size > 0) {
+                socket.emit('submit_likes_only', {
+                    likes: Array.from(likedOptions)
+                });
+            }
+        });
+
+        socket.on('show_results', (data) => {
+            showScreen('results-screen');
+            const scoresDiv = document.getElementById('round-scores');
+            scoresDiv.innerHTML = '<h3 style="margin-bottom: 15px;">Scores:</h3>';
+            
+            const sorted = Object.entries(data.scores).sort((a, b) => b[1] - a[1]);
+            sorted.forEach(([pid, score]) => {
+                const player = data.players[pid];
+                const likes = data.likes[pid] || 0;
+                const div = document.createElement('div');
+                div.className = 'score-item';
+                div.innerHTML = `<span>${player.name}</span><span>${score} pts | ❤️ ${likes}</span>`;
+                scoresDiv.appendChild(div);
+            });
+        });
+
+        socket.on('wait', (data) => {
+            showScreen('waiting-screen');
+            document.getElementById('waiting-message').textContent = data.message;
+        });
+
+        socket.on('show_current_scores', (data) => {
+            // Show dramatic white fade first
+            const whiteScreen = document.createElement('div');
+            whiteScreen.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: white;
+                z-index: 99999;
+                animation: fadeOut 0.5s ease-in 2.5s forwards;
+            `;
+            document.body.appendChild(whiteScreen);
+            
+            // Wait for fade to complete before showing results
+            setTimeout(() => {
+                document.body.removeChild(whiteScreen);
+                
+                showScreen('results-screen');
+                
+                // Show the correct answer reveal
+                const revealContainer = document.getElementById('answer-reveal-container');
+                revealContainer.style.display = 'block';
+                document.getElementById('correct-answer-text').textContent = `${data.correct_answer}`;
+                document.getElementById('reveal-drawing').src = data.drawing_image;
+            
+            // Show who wrote what and who voted for what
+            const votingDetails = document.createElement('div');
+            votingDetails.style.cssText = `margin: 20px 0; padding: 15px; background: ${playerColors.light}26;`;
+            votingDetails.innerHTML = `<h4 style="margin-bottom: 10px; color: ${playerColors.light};">Voting Details:</h4>`;
+            
+            // Show the correct answer with artist
+            const artist = data.players[data.artist_id];
+            const correctDiv = document.createElement('div');
+            correctDiv.style.cssText = `margin: 8px 0; padding: 8px; background: ${playerColors.dark}26;`;
+            correctDiv.innerHTML = `<strong>✓ "${data.correct_answer}"</strong> - by ${artist.name} (correct answer)`;
+            votingDetails.appendChild(correctDiv);
+            
+            // Count votes for each option
+            const voteCount = {};
+            const votersPerOption = {};
+            
+            // Count votes for correct answer
+            voteCount[data.correct_answer] = 0;
+            votersPerOption[data.correct_answer] = [];
+            
+            data.votes.forEach(v => {
+                // Skip if no vote (artist likes-only)
+                if (!v.vote) return;
+                
+                if (!voteCount[v.vote]) {
+                    voteCount[v.vote] = 0;
+                    votersPerOption[v.vote] = [];
+                }
+                voteCount[v.vote]++;
+                votersPerOption[v.vote].push(data.players[v.player_id].name);
+            });
+            
+            // Show each guess with author and voters (skip empty guesses)
+            data.guesses.forEach(g => {
+                // Skip empty guesses
+                if (!g.guess || !g.guess.trim()) return;
+                
+                const guessDiv = document.createElement('div');
+                guessDiv.style.cssText = 'margin: 8px 0; padding: 8px; background: rgba(255, 255, 255, 0.5);';
+                const guesser = data.players[g.player_id];
+                const votes = voteCount[g.guess] || 0;
+                const voters = votersPerOption[g.guess] || [];
+                const votersList = voters.length > 0 ? ` - fooled: ${voters.join(', ')}` : '';
+                guessDiv.innerHTML = `"${g.guess}" - by ${guesser.name} (${votes} vote${votes !== 1 ? 's' : ''}${votersList})`;
+                votingDetails.appendChild(guessDiv);
+            });
+            
+            // Show votes for correct answer
+            const correctVotes = voteCount[data.correct_answer] || 0;
+            const correctVoters = votersPerOption[data.correct_answer] || [];
+            if (correctVoters.length > 0) {
+                const correctVotersDiv = document.createElement('div');
+                correctVotersDiv.style.cssText = `margin: 8px 0; padding: 8px; background: ${playerColors.dark}1A; font-style: italic;`;
+                correctVotersDiv.innerHTML = `Guessed correctly: ${correctVoters.join(', ')}`;
+                votingDetails.appendChild(correctVotersDiv);
+            }
+            
+            // Insert voting details before scores
+            const scoresDiv = document.getElementById('round-scores');
+            scoresDiv.innerHTML = '';
+            scoresDiv.appendChild(votingDetails);
+            
+            const scoresHeader = document.createElement('h3');
+            scoresHeader.style.cssText = 'margin-bottom: 15px; margin-top: 20px;';
+            scoresHeader.textContent = 'Current Scores:';
+            scoresDiv.appendChild(scoresHeader);
+            
+            const sorted = Object.entries(data.scores).sort((a, b) => b[1] - a[1]);
+            sorted.forEach(([pid, score]) => {
+                const player = data.players[pid];
+                const div = document.createElement('div');
+                div.className = 'score-item';
+                div.innerHTML = `<span>${player.name}</span><span>${score} pts</span>`;
+                scoresDiv.appendChild(div);
+            });
+            }, 3000); // End of setTimeout for white fade
+        });
+
+        socket.on('show_final', (data) => {
+            showScreen('final-screen');
+            
+            // Display score winners - show all players in rank order
+            const scoresDiv = document.getElementById('final-scores');
+            scoresDiv.innerHTML = '';
+            const sorted = Object.entries(data.scores).sort((a, b) => b[1] - a[1]);
+            
+            let currentRank = 1;
+            let prevScore = null;
+            let sameRankCount = 0;
+            
+            sorted.forEach(([pid, score], idx) => {
+                const player = data.players[pid];
+                const div = document.createElement('div');
+                
+                // Handle ties - same score = same rank
+                if (prevScore !== null && score !== prevScore) {
+                    currentRank = idx + 1;
+                    sameRankCount = 0;
+                }
+                
+                // Medal logic based on rank
+                let medal = '';
+                const isWinner = currentRank === 1;
+                if (currentRank === 1) medal = '🥇 ';
+                else if (currentRank === 2) medal = '🥈 ';
+                else if (currentRank === 3) medal = '🥉 ';
+                
+                div.className = isWinner ? 'score-item winner' : 'score-item';
+                div.innerHTML = `<span>${medal}${player.name}</span><span>${score} pts</span>`;
+                scoresDiv.appendChild(div);
+                
+                prevScore = score;
+                sameRankCount++;
+            });
+            
+            // Display likes winners - show all players in rank order
+            const likesDiv = document.getElementById('final-likes');
+            likesDiv.innerHTML = '';
+            const sortedLikes = Object.entries(data.likes).sort((a, b) => b[1] - a[1]);
+            
+            currentRank = 1;
+            prevScore = null;
+            
+            sortedLikes.forEach(([pid, likes], idx) => {
+                const player = data.players[pid];
+                const div = document.createElement('div');
+                
+                // Handle ties - same likes = same rank
+                if (prevScore !== null && likes !== prevScore) {
+                    currentRank = idx + 1;
+                }
+                
+                // Medal logic based on rank
+                let medal = '';
+                const isWinner = currentRank === 1;
+                if (currentRank === 1) medal = '🥇 ';
+                else if (currentRank === 2) medal = '🥈 ';
+                else if (currentRank === 3) medal = '🥉 ';
+                
+                div.className = isWinner ? 'score-item winner' : 'score-item';
+                div.innerHTML = `<span>${medal}${player.name}</span><span>❤️ ${likes} likes</span>`;
+                likesDiv.appendChild(div);
+                
+                prevScore = likes;
+            });
+        });
+
+        socket.on('wait', (data) => {
+            showScreen('waiting-screen');
+            document.getElementById('waiting-message').textContent = data.message;
+        });
+
+        socket.on('reset', () => {
+            showScreen('lobby-screen');
+        });
+    </script>
+</body>
+</html>

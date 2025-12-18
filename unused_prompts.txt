@@ -1,89 +1,64 @@
-A burglar stuck in a chimney
-A dog stepping on a gun
-Drunk animals
-Two hunters pointing at each other
 A man walking into his own funeral
 Driving with a body stuck in your windshield
-A cow causing global warming
 A criminal biting a police dog
 Burglars’ footprints in snow leading to their house
 Crashing into the DMV during your driving test
 DUI on a bicycle
-A robber getting into a police car by mistake
 Smoking while connected to an oxygen tank
-Checking a gas tank with a lighter
-Driving your car through a store window
 A fistfight at a peace conference
 An elderly driver lost for three days
 Carjackers who can’t drive stick shift
 Forgetting your kid at a rest stop
 Firefighter who starts fires
-Octopus playing piano
-A superhero's day off
 Bear in a hot air balloon
-Dragon doing yoga
-Alien trying sushi
-Astronaut gardening
-Ninja in a library
-Dinosaur at a birthday party
-Penguin surfing
-Sasquatch taking a selfie
-Bird's eye view
 Bull in a china shop
 Mermaid riding a bike
 Underwater tea party
-Fish out of water
-Chicken crossing the road
-Octopus playing piano
-Snake in the grass
-Dog eating homework
-Elephant in a china shop
-Pizza delivery on Mars
-Cat running a business meeting
 Ghost doing laundry
 Vampire at a dentist
-Cat got your tongue
-Wolf in sheep's clothing
-Unicorn stuck in traffic
-Robot therapist
-Time traveler at a drive-thru
-Robot learning to dance
-Cow jumping over the moon
-Monkey business
-Zombie barista
 Raining cats and dogs
 Bear in a hot air balloon
-Cat running a business meeting
-Wizard cooking breakfast
-Werewolf at the gym
 Vampire at a dentist
-Wolf in sheep's clothing
-Alien trying sushi
-Bird's eye view
-Monkey business
 Pirate doing taxes
-Cow jumping over the moon
-Dinosaur at a birthday party
-Unicorn stuck in traffic
-Penguin surfing
-A superhero's day off
-Elephant in a china shop
-Dragon doing yoga
-Snake in the grass
-Fish out of water
-Cat got your tongue
-Ninja in a library
-Dog eating homework
 Ghost doing laundry
-Pizza delivery on Mars
 Mermaid riding a bike
-Zombie barista
-Robot therapist
-Astronaut gardening
 Raining cats and dogs
-Time traveler at a drive-thru
 Underwater tea party
 Bull in a china shop
-Chicken crossing the road
-Robot learning to dance
+Octopus playing piano
 Sasquatch taking a selfie
+Wizard cooking breakfast
+Sasquatch taking a selfie
+Astronaut gardening
+Dinosaur at a birthday party
+Robot learning to dance
+Driving your car through a store window
+Unicorn stuck in traffic
+A burglar stuck in a chimney
+Penguin surfing
+Chicken crossing the road
+Monkey business
+Checking a gas tank with a lighter
+A robber getting into a police car by mistake
+Snake in the grass
+Elephant in a china shop
+Pizza delivery on Mars
+Werewolf at the gym
+Alien trying sushi
+A superhero's day off
+Cow jumping over the moon
+Drunk animals
+Bird's eye view
+A cow causing global warming
+Dog eating homework
+Wolf in sheep's clothing
+A dog stepping on a gun
+Zombie barista
+Robot therapist
+Two hunters pointing at each other
+Dragon doing yoga
+Cat got your tongue
+Time traveler at a drive-thru
+Cat running a business meeting
+Ninja in a library
+Fish out of water
