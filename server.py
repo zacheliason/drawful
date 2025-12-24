@@ -67,7 +67,7 @@ try:
 except Exception:
     LOCAL_IP = "127.0.0.1"
 
-GAME_URL = f"http://{LOCAL_IP}:{config.DEFAULT_PORT}"
+GAME_URL = f"https://{LOCAL_IP}:{config.DEFAULT_PORT}"
 
 # Load prompts
 PROMPT_BANK = load_prompts()
@@ -660,7 +660,7 @@ if __name__ == "__main__":
 
     port_to_use = find_available_port(config.DEFAULT_PORT)
     # Update GAME_URL to include the actual port we will bind to.
-    GAME_URL = f"http://{LOCAL_IP}:{port_to_use}"
+    GAME_URL = f"https://{LOCAL_IP}:{port_to_use}"
 
     print(f"  Local:   http://localhost:{port_to_use}")
     print(f"  Network: {GAME_URL}")
