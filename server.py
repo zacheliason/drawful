@@ -11,7 +11,7 @@ import warnings
 from io import BytesIO
 
 import qrcode
-from flask import Flask, request, send_file
+from flask import Flask, render_template, request, send_file
 from flask_socketio import SocketIO, emit
 
 # Import our modularized components
@@ -601,8 +601,12 @@ def handle_play_again():
 @app.route("/qr_code")
 def qr_code():
     """Generate QR code for the game URL."""
+    # Use the same protocol as the current request to avoid iOS compatibility issues
+    protocol = "https" if request.is_secure else "http"
+    qr_url = f"{protocol}://{LOCAL_IP}:{config.DEFAULT_PORT}"
+    
     qr = qrcode.QRCode(box_size=10, border=2)
-    qr.add_data(GAME_URL)
+    qr.add_data(qr_url)
     qr.make(fit=True)
     img = qr.make_image(fill_color="black", back_color="white")
     
@@ -612,8 +616,21 @@ def qr_code():
     
     return send_file(buf, mimetype="image/png")
 
+# Ensure the configured port is available; if not, pick the next free port.
+def find_available_port(start_port, max_tries=50):
+    for p in range(start_port, start_port + max_tries):
+        try:
+            test_sock = socket_module.socket(socket_module.AF_INET, socket_module.SOCK_STREAM)
+            test_sock.setsockopt(socket_module.SOL_SOCKET, socket_module.SO_REUSEADDR, 1)
+            test_sock.bind(("", p))
+            test_sock.close()
+            return p
+        except OSError:
+            continue
+    return start_port
 
-from flask import render_template
+
+
 
 
 @app.route("/")
@@ -645,18 +662,6 @@ if __name__ == "__main__":
     print(f"  Min Players: {config.MIN_PLAYERS}")
     print(f"  Max Players: {config.MAX_PLAYERS}")
     print("\nServer starting on:")
-    # Ensure the configured port is available; if not, pick the next free port.
-    def find_available_port(start_port, max_tries=50):
-        for p in range(start_port, start_port + max_tries):
-            try:
-                test_sock = socket_module.socket(socket_module.AF_INET, socket_module.SOCK_STREAM)
-                test_sock.setsockopt(socket_module.SOL_SOCKET, socket_module.SO_REUSEADDR, 1)
-                test_sock.bind(("", p))
-                test_sock.close()
-                return p
-            except OSError:
-                continue
-        return start_port
 
     port_to_use = find_available_port(config.DEFAULT_PORT)
     # Update GAME_URL to include the actual port we will bind to.
