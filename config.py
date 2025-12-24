@@ -16,7 +16,9 @@ NUM_ROUNDS = 1
 
 # Server Configuration
 DEFAULT_PORT = 5001
-HOSTNAME = "mac.lan"
+# If HOSTNAME is set, the server will prefer it when printing the Network URL.
+# Leave empty to force auto-detection of the active LAN interface IP.
+HOSTNAME = ""
 
 # Socket.IO Configuration
 PING_TIMEOUT = 60

@@ -36,9 +36,34 @@ socketio = SocketIO(
     ping_interval=config.PING_INTERVAL,
 )
 
-# Get local IP for game URL
+# Get local IP for game URL — prefer the active LAN interface IP.
+# Binding uses 0.0.0.0 so we need a routable IP for the QR/printed GAME_URL.
+LOCAL_IP = "127.0.0.1"
 try:
-    LOCAL_IP = socket_module.gethostbyname(config.HOSTNAME)
+    # If a HOSTNAME is explicitly configured and resolves to a non-loopback
+    # address, use it. Otherwise fall back to probing the active interface.
+    hostname = getattr(config, "HOSTNAME", None)
+    if hostname:
+        try:
+            resolved = socket_module.gethostbyname(hostname)
+            if resolved and not resolved.startswith("127."):
+                LOCAL_IP = resolved
+            else:
+                raise Exception("resolved to loopback, use interface probe")
+        except Exception:
+            # Probe active interface by creating a UDP socket to a public IP.
+            try:
+                s = socket_module.socket(socket_module.AF_INET, socket_module.SOCK_DGRAM)
+                s.connect(("8.8.8.8", 80))
+                LOCAL_IP = s.getsockname()[0]
+                s.close()
+            except Exception:
+                LOCAL_IP = "127.0.0.1"
+    else:
+        s = socket_module.socket(socket_module.AF_INET, socket_module.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        LOCAL_IP = s.getsockname()[0]
+        s.close()
 except Exception:
     LOCAL_IP = "127.0.0.1"
 
@@ -620,16 +645,36 @@ if __name__ == "__main__":
     print(f"  Min Players: {config.MIN_PLAYERS}")
     print(f"  Max Players: {config.MAX_PLAYERS}")
     print("\nServer starting on:")
-    print(f"  Local:   http://localhost:{config.DEFAULT_PORT}")
+    # Ensure the configured port is available; if not, pick the next free port.
+    def find_available_port(start_port, max_tries=50):
+        for p in range(start_port, start_port + max_tries):
+            try:
+                test_sock = socket_module.socket(socket_module.AF_INET, socket_module.SOCK_STREAM)
+                test_sock.setsockopt(socket_module.SOL_SOCKET, socket_module.SO_REUSEADDR, 1)
+                test_sock.bind(("", p))
+                test_sock.close()
+                return p
+            except OSError:
+                continue
+        return start_port
+
+    port_to_use = find_available_port(config.DEFAULT_PORT)
+    # Update GAME_URL to include the actual port we will bind to.
+    GAME_URL = f"http://{LOCAL_IP}:{port_to_use}"
+
+    print(f"  Local:   http://localhost:{port_to_use}")
     print(f"  Network: {GAME_URL}")
     print("\nShare the Network address with players on your WiFi!")
     print("=" * 50 + "\n")
-    
-    socketio.run(
-        app,
-        host="0.0.0.0",
-        port=config.DEFAULT_PORT,
-        debug=False,
-        allow_unsafe_werkzeug=True,
-        use_reloader=False,
-    )
+    try:
+        socketio.run(
+            app,
+            host="0.0.0.0",
+            port=port_to_use,
+            debug=False,
+            allow_unsafe_werkzeug=True,
+            use_reloader=False,
+        )
+    except OSError as e:
+        print(f"Failed to start server: {e}")
+        sys.exit(1)
