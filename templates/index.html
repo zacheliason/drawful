@@ -101,6 +101,16 @@
             border-color: var(--player-light, #ff4f00);
             box-shadow: 0 0 0 3px var(--player-light-20, rgba(255, 79, 0, 0.2));
         }
+        .tool-btn.no-active-style {
+            background: white !important;
+            color: #1f2937 !important;
+            border: 2px solid rgba(0,0,0,0.1) !important;
+            box-shadow: none !important;
+        }
+        .tool-btn.no-active-style:hover {
+            border-color: var(--player-light, #ff4f00) !important;
+            background: white !important;
+        }
         .players-list {
             background: var(--player-light-05, rgba(255, 79, 0, 0.05));
             padding: 20px;
@@ -345,7 +355,7 @@
             100% { transform: scale(1); opacity: 1; }
         }
         .reveal-drawing {
-            max-width: 400px;
+            width: 100%;
             margin: 20px auto;
             display: block;
             border: 3px solid var(--player-light-30, rgba(255, 79, 0, 0.3));
@@ -407,6 +417,94 @@
         .most-liked-header {
             color: var(--player-light, #ff4f00);
         }
+        .emoji-picker {
+            margin: 15px 0;
+        }
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .emoji-option {
+            font-size: 32px;
+            padding: 10px;
+            cursor: pointer;
+            background: white;
+            border: 2px solid rgba(0,0,0,0.1);
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .emoji-option:hover {
+            transform: scale(1.1);
+            border-color: var(--player-light, #ff4f00);
+            background: var(--player-light-05, rgba(255, 79, 0, 0.05));
+        }
+        .emoji-option.selected {
+            border: 3px solid var(--player-light, #ff4f00);
+            background: var(--player-light-10, rgba(255, 79, 0, 0.1));
+            transform: scale(1.15);
+            box-shadow: 0 0 0 3px var(--player-light-20, rgba(255, 79, 0, 0.2));
+        }
+        .prompt-card {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: white;
+            padding: 60px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            z-index: 10000;
+            max-width: 90vw;
+            text-align: center;
+            opacity: 0;
+        }
+        .prompt-card.expanding {
+            animation: expandPrompt 0.6s ease-out forwards;
+        }
+        .prompt-card.shrinking {
+            animation: shrinkPrompt 0.4s ease-in forwards;
+        }
+        .prompt-card .prompt-text {
+            font-size: 48px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 30px;
+            line-height: 1.2;
+        }
+        .prompt-card .emoji-display {
+            font-size: 64px;
+            margin: 20px 0;
+        }
+        .prompt-card .author-emoji {
+            margin-top: 20px;
+            font-size: 40px;
+        }
+        .prompt-card .voter-emojis {
+            margin-top: 20px;
+            font-size: 32px;
+        }
+        @keyframes expandPrompt {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+        @keyframes shrinkPrompt {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0;
+            }
+        }
 
         /* Mobile adjustments: reduce side margins and padding for small screens */
         @media (max-width: 600px) {
@@ -441,6 +539,11 @@
         <!-- Join Screen -->
         <div id="join-screen" class="screen active">
             <input type="text" id="player-name" placeholder="Enter your name" maxlength="20">
+            <div class="emoji-picker">
+                <label style="display: block; margin: 15px 0 10px; font-weight: 700; color: #1f2937;">Choose your emoji:</label>
+                <input type="text" id="emoji-input" placeholder="Enter any emoji (e.g., 😀)" maxlength="2" style="font-size: 32px; text-align: center;">
+                <div id="emoji-error" style="color: #ef4444; font-size: 14px; margin-top: 5px; display: none;"></div>
+            </div>
             <button onclick="joinGame()">Join Game</button>
             <div class="waiting">Waiting to join...</div>
         </div>
@@ -472,12 +575,12 @@
                 <button class="tool-btn active" onclick="setTool('pen')" id="pen-btn" title="Pen">🖊️</button>
                 <button class="tool-btn" onclick="setTool('fill')" title="Fill">🪣</button>
                 <button class="tool-btn" onclick="setTool('eraser')" title="Eraser">🧹</button>
-                <button class="tool-btn" onclick="undoCanvas()" title="Undo">↩️</button>
+                <button class="tool-btn no-active-style" onclick="undoCanvas()" title="Undo">↩️</button>
                 <input type="range" id="size-slider" min="1" max="20" value="12" style="flex: 1; min-width: 60px;" title="Brush Size">
             </div>
             <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button class="tool-btn" onclick="clearCanvas()" style="flex: 1; margin: 0;">🗑️ Clear All</button>
-                <button class="tool-btn" onclick="addTime()" style="flex: 1; margin: 0;">⏱️ +30s</button>
+                <button class="tool-btn no-active-style" onclick="clearCanvas()" style="flex: 1; margin: 0;">🗑️ Clear All</button>
+                <button class="tool-btn no-active-style" onclick="addTime()" style="flex: 1; margin: 0;">⏱️ +30s</button>
             </div>
             <button onclick="submitDrawing()" style="margin-top: 15px;">Submit Drawing</button>
         </div>
@@ -535,6 +638,7 @@
         const socket = io();
         let playerId = null;
         let playerName = '';
+        let playerEmoji = '😀'; // Default emoji
         let currentTool = 'pen';
         let lastDrawingTool = 'dark'; // Track last drawing tool for fill color
         let isDrawing = false;
@@ -549,6 +653,37 @@
 
         document.getElementById('game-url').textContent = window.location.href;
 
+        // Set default emoji
+        playerEmoji = '😀';
+        document.getElementById('emoji-input').value = '😀';
+
+        // Validate emoji input
+        function isValidEmoji(str) {
+            // Check if string contains exactly one emoji
+            const emojiRegex = /^(\p{Emoji_Presentation}|\p{Emoji}\uFE0F)$/u;
+            return emojiRegex.test(str) && [...str].length === 1;
+        }
+
+        document.getElementById('emoji-input').addEventListener('input', function(e) {
+            const input = e.target.value;
+            const errorDiv = document.getElementById('emoji-error');
+            
+            if (input.length === 0) {
+                errorDiv.style.display = 'none';
+                playerEmoji = '😀';
+                return;
+            }
+            
+            if (!isValidEmoji(input)) {
+                errorDiv.textContent = 'Please enter a single emoji';
+                errorDiv.style.display = 'block';
+                playerEmoji = '😀';
+            } else {
+                errorDiv.style.display = 'none';
+                playerEmoji = input;
+            }
+        });
+
         function showScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
@@ -556,9 +691,21 @@
 
         function joinGame() {
             playerName = document.getElementById('player-name').value.trim();
-            if (playerName) {
-                socket.emit('join', { name: playerName });
+            const emojiInput = document.getElementById('emoji-input').value.trim();
+            const errorDiv = document.getElementById('emoji-error');
+            
+            if (!playerName) {
+                return;
             }
+            
+            if (!emojiInput || !isValidEmoji(emojiInput)) {
+                errorDiv.textContent = 'Please enter a valid emoji';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            playerEmoji = emojiInput;
+            socket.emit('join', { name: playerName, emoji: playerEmoji });
         }
 
         function startGame() {
@@ -949,13 +1096,19 @@
             showScreen('lobby-screen');
         });
 
+        socket.on('emoji_taken', (data) => {
+            const errorDiv = document.getElementById('emoji-error');
+            errorDiv.textContent = data.message;
+            errorDiv.style.display = 'block';
+        });
+
         socket.on('update_lobby', (data) => {
             const playersList = document.getElementById('lobby-players');
             playersList.innerHTML = '';
             Object.values(data.players).forEach(player => {
                 const div = document.createElement('div');
                 div.className = 'player-item';
-                div.innerHTML = `<span>${player.name}</span>`;
+                div.innerHTML = `<span>${player.emoji} ${player.name}</span>`;
                 playersList.appendChild(div);
             });
             
@@ -1065,7 +1218,9 @@
                     
                     const textSpan = document.createElement('span');
                     textSpan.className = 'vote-option-text';
-                    textSpan.textContent = option.text;
+                    // Show emoji of the player who wrote this option
+                    const authorEmoji = data.players[option.player_id]?.emoji || '';
+                    textSpan.textContent = `${authorEmoji} ${option.text}`;
                     
                     const likeBtn = document.createElement('button');
                     likeBtn.className = 'like-btn';
@@ -1159,43 +1314,9 @@
         });
 
         socket.on('show_current_scores', (data) => {
-            // Show dramatic white fade first
-            const whiteScreen = document.createElement('div');
-            whiteScreen.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: white;
-                z-index: 99999;
-                animation: fadeOut 0.5s ease-in 2.5s forwards;
-            `;
-            document.body.appendChild(whiteScreen);
-            
-            // Wait for fade to complete before showing results
-            setTimeout(() => {
-                document.body.removeChild(whiteScreen);
-                
-                showScreen('results-screen');
-                
-                // Show the correct answer reveal
-                const revealContainer = document.getElementById('answer-reveal-container');
-                revealContainer.style.display = 'block';
-                document.getElementById('correct-answer-text').textContent = `${data.correct_answer}`;
-                document.getElementById('reveal-drawing').src = data.drawing_image;
-            
-            // Show who wrote what and who voted for what
-            const votingDetails = document.createElement('div');
-            votingDetails.style.cssText = `margin: 20px 0; padding: 15px; background: ${playerColors.light}26;`;
-            votingDetails.innerHTML = `<h4 style="margin-bottom: 10px; color: ${playerColors.light};">Voting Details:</h4>`;
-            
-            // Show the correct answer with artist
-            const artist = data.players[data.artist_id];
-            const correctDiv = document.createElement('div');
-            correctDiv.style.cssText = `margin: 8px 0; padding: 8px; background: ${playerColors.dark}26;`;
-            correctDiv.innerHTML = `<strong>✓ "${data.correct_answer}"</strong> - by ${artist.name} (correct answer)`;
-            votingDetails.appendChild(correctDiv);
+            // Prepare data structures for animation
+            const wrongGuesses = [];
+            const correctVoters = [];
             
             // Count votes for each option
             const voteCount = {};
@@ -1214,53 +1335,139 @@
                     votersPerOption[v.vote] = [];
                 }
                 voteCount[v.vote]++;
-                votersPerOption[v.vote].push(data.players[v.player_id].name);
+                const voterEmoji = data.players[v.player_id]?.emoji || '';
+                votersPerOption[v.vote].push(voterEmoji);
             });
             
-            // Show each guess with author and voters (skip empty guesses)
+            // Collect wrong guesses with their data
             data.guesses.forEach(g => {
                 // Skip empty guesses
                 if (!g.guess || !g.guess.trim()) return;
                 
-                const guessDiv = document.createElement('div');
-                guessDiv.style.cssText = 'margin: 8px 0; padding: 8px; background: rgba(255, 255, 255, 0.5);';
                 const guesser = data.players[g.player_id];
-                const votes = voteCount[g.guess] || 0;
                 const voters = votersPerOption[g.guess] || [];
-                const votersList = voters.length > 0 ? ` - fooled: ${voters.join(', ')}` : '';
-                guessDiv.innerHTML = `"${g.guess}" - by ${guesser.name} (${votes} vote${votes !== 1 ? 's' : ''}${votersList})`;
-                votingDetails.appendChild(guessDiv);
+                wrongGuesses.push({
+                    text: g.guess,
+                    authorEmoji: guesser?.emoji || '',
+                    voterEmojis: voters
+                });
             });
             
-            // Show votes for correct answer
-            const correctVotes = voteCount[data.correct_answer] || 0;
-            const correctVoters = votersPerOption[data.correct_answer] || [];
-            if (correctVoters.length > 0) {
-                const correctVotersDiv = document.createElement('div');
-                correctVotersDiv.style.cssText = `margin: 8px 0; padding: 8px; background: ${playerColors.dark}1A; font-style: italic;`;
-                correctVotersDiv.innerHTML = `Guessed correctly: ${correctVoters.join(', ')}`;
-                votingDetails.appendChild(correctVotersDiv);
+            // Get correct answer voters
+            const correctVoterEmojis = votersPerOption[data.correct_answer] || [];
+            
+            // Hide the main container and results screen initially
+            showScreen('results-screen');
+            const container = document.querySelector('.container');
+            const resultsScreen = document.getElementById('results-screen');
+            container.style.opacity = '0';
+            
+            // Create overlay for animations
+            const animationOverlay = document.createElement('div');
+            animationOverlay.id = 'animation-overlay';
+            animationOverlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: white;
+                z-index: 100000;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            `;
+            document.body.appendChild(animationOverlay);
+            
+            let currentIndex = 0;
+            
+            function animateNextPrompt() {
+                if (currentIndex < wrongGuesses.length) {
+                    // Show wrong guess
+                    const guess = wrongGuesses[currentIndex];
+                    const promptCard = document.createElement('div');
+                    promptCard.className = 'prompt-card';
+                    promptCard.innerHTML = `
+                        <div class="prompt-text">"${guess.text}"</div>
+                        ${guess.voterEmojis.length > 0 ? `<div class="voter-emojis">${guess.voterEmojis.join(' ')}</div>` : '<div class="voter-emojis" style="color: #999;">No votes</div>'}
+                        <div class="author-emoji">${guess.authorEmoji}</div>
+                    `;
+                    animationOverlay.appendChild(promptCard);
+                    
+                    // Trigger expand animation
+                    setTimeout(() => promptCard.classList.add('expanding'), 50);
+                    
+                    // Shrink and remove after delay
+                    setTimeout(() => {
+                        promptCard.classList.remove('expanding');
+                        promptCard.classList.add('shrinking');
+                        setTimeout(() => {
+                            animationOverlay.removeChild(promptCard);
+                            currentIndex++;
+                            animateNextPrompt();
+                        }, 400);
+                    }, 2500);
+                } else {
+                    // All wrong guesses shown, now show correct answer
+                    showCorrectAnswer();
+                }
             }
             
-            // Insert voting details before scores
-            const scoresDiv = document.getElementById('round-scores');
-            scoresDiv.innerHTML = '';
-            scoresDiv.appendChild(votingDetails);
+            function showCorrectAnswer() {
+                const artist = data.players[data.artist_id];
+                const promptCard = document.createElement('div');
+                promptCard.className = 'prompt-card';
+                promptCard.innerHTML = `
+                    <div class="prompt-text" style="color: #10b981;">"${data.correct_answer}"</div>
+                    <div style="font-size: 24px; color: #10b981; font-weight: 600; margin: 20px 0;">✓ CORRECT ANSWER</div>
+                    ${correctVoterEmojis.length > 0 ? `<div class="voter-emojis">${correctVoterEmojis.join(' ')}</div>` : '<div class="voter-emojis" style="color: #999;">Nobody guessed it!</div>'}
+                    <div class="author-emoji">${artist?.emoji || ''}</div>
+                `;
+                animationOverlay.appendChild(promptCard);
+                
+                // Trigger expand animation
+                setTimeout(() => promptCard.classList.add('expanding'), 50);
+                
+                // Shrink and show scores
+                setTimeout(() => {
+                    promptCard.classList.remove('expanding');
+                    promptCard.classList.add('shrinking');
+                    setTimeout(() => {
+                        animationOverlay.removeChild(promptCard);
+                        showScores();
+                    }, 400);
+                }, 3000);
+            }
             
-            const scoresHeader = document.createElement('h3');
-            scoresHeader.style.cssText = 'margin-bottom: 15px; margin-top: 20px;';
-            scoresHeader.textContent = 'Current Scores:';
-            scoresDiv.appendChild(scoresHeader);
+            function showScores() {
+                // Remove overlay
+                document.body.removeChild(animationOverlay);
+                
+                // Show container with scores
+                container.style.opacity = '1';
+                container.style.transition = 'opacity 0.5s';
+                
+                // Populate scores
+                const scoresDiv = document.getElementById('round-scores');
+                scoresDiv.innerHTML = '';
+                
+                const scoresHeader = document.createElement('h3');
+                scoresHeader.style.cssText = 'margin-bottom: 15px; margin-top: 20px; text-align: center; font-size: 28px;';
+                scoresHeader.textContent = 'Current Scores';
+                scoresDiv.appendChild(scoresHeader);
+                
+                const sorted = Object.entries(data.scores).sort((a, b) => b[1] - a[1]);
+                sorted.forEach(([pid, score]) => {
+                    const player = data.players[pid];
+                    const div = document.createElement('div');
+                    div.className = 'score-item';
+                    div.innerHTML = `<span>${player.emoji} ${player.name}</span><span>${score} pts</span>`;
+                    scoresDiv.appendChild(div);
+                });
+            }
             
-            const sorted = Object.entries(data.scores).sort((a, b) => b[1] - a[1]);
-            sorted.forEach(([pid, score]) => {
-                const player = data.players[pid];
-                const div = document.createElement('div');
-                div.className = 'score-item';
-                div.innerHTML = `<span>${player.name}</span><span>${score} pts</span>`;
-                scoresDiv.appendChild(div);
-            });
-            }, 3000); // End of setTimeout for white fade
+            // Start animation sequence
+            setTimeout(() => animateNextPrompt(), 500);
         });
 
         socket.on('show_final', (data) => {
@@ -1293,7 +1500,7 @@
                 else if (currentRank === 3) medal = '🥉 ';
                 
                 div.className = isWinner ? 'score-item winner' : 'score-item';
-                div.innerHTML = `<span>${medal}${player.name}</span><span>${score} pts</span>`;
+                div.innerHTML = `<span>${medal}${player.emoji} ${player.name}</span><span>${score} pts</span>`;
                 scoresDiv.appendChild(div);
                 
                 prevScore = score;
@@ -1325,7 +1532,7 @@
                 else if (currentRank === 3) medal = '🥉 ';
                 
                 div.className = isWinner ? 'score-item winner' : 'score-item';
-                div.innerHTML = `<span>${medal}${player.name}</span><span>❤️ ${likes} likes</span>`;
+                div.innerHTML = `<span>${medal}${player.emoji} ${player.name}</span><span>❤️ ${likes} likes</span>`;
                 likesDiv.appendChild(div);
                 
                 prevScore = likes;

@@ -174,12 +174,32 @@ def handle_join(data):
     """Handle player joining the game."""
     player_id = request.sid
     name = data["name"].strip()
+    emoji = data.get("emoji", "😀")
+
+    # Check if emoji is already taken by another player
+    for pid, pdata in game_state.players.items():
+        if pid != player_id and pdata.get("emoji") == emoji:
+            emit("emoji_taken", {"message": f"Emoji {emoji} is already taken by {pdata['name']}!"})
+            return
 
     # Check for reconnecting players
     for pid, pdata in list(game_state.players.items()):
         if pdata["name"].lower() == name.lower() and pid != player_id:
+            # Check if new emoji is taken by someone else
+            emoji_conflict = False
+            for other_pid, other_pdata in game_state.players.items():
+                if other_pid != pid and other_pid != player_id and other_pdata.get("emoji") == emoji:
+                    emit("emoji_taken", {"message": f"Emoji {emoji} is already taken by {other_pdata['name']}!"})
+                    emoji_conflict = True
+                    break
+            
+            if emoji_conflict:
+                return
+            
             # Reassign session ID
             game_state.players[player_id] = pdata
+            # Update emoji if reconnecting with different emoji
+            game_state.players[player_id]["emoji"] = emoji
             del game_state.players[pid]
             
             emit(
@@ -192,7 +212,7 @@ def handle_join(data):
             return
 
     # New player
-    player_data = game_state.add_player(player_id, name)
+    player_data = game_state.add_player(player_id, name, emoji)
     
     if player_data is None:
         emit("game_in_progress")
@@ -404,10 +424,10 @@ def start_voting_for_current_drawing():
     for pid in game_state.players.keys():
         if pid != current["player_id"]:
             # Create options (guesses + real prompt, excluding this player's guess)
-            options = [{"text": current["prompt"]}]
+            options = [{"text": current["prompt"], "player_id": current["player_id"], "is_correct": True}]
             for g in guesses:
                 if g["player_id"] != pid and g["guess"].strip():  # Filter out empty guesses
-                    options.append({"text": g["guess"]})
+                    options.append({"text": g["guess"], "player_id": g["player_id"], "is_correct": False})
             
             random.shuffle(options)
             
@@ -416,16 +436,17 @@ def start_voting_for_current_drawing():
                 {
                     "image": current["image"],
                     "options": options,
-                    "artist_id": current["player_id"]
+                    "artist_id": current["player_id"],
+                    "players": game_state.players
                 },
                 room=pid
             )
         else:
             # Artist gets voting screen too, but with all options (to like)
-            options = [{"text": current["prompt"]}]
+            options = [{"text": current["prompt"], "player_id": current["player_id"], "is_correct": True}]
             for g in guesses:
                 if g["guess"].strip():  # Filter out empty guesses
-                    options.append({"text": g["guess"]})
+                    options.append({"text": g["guess"], "player_id": g["player_id"], "is_correct": False})
             
             random.shuffle(options)
             
@@ -434,7 +455,8 @@ def start_voting_for_current_drawing():
                 {
                     "image": current["image"],
                     "options": options,
-                    "artist_id": current["player_id"]
+                    "artist_id": current["player_id"],
+                    "players": game_state.players
                 },
                 room=pid
             )

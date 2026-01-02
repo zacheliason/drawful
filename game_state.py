@@ -15,7 +15,7 @@ class GameState:
     def reset(self):
         """Reset game to initial lobby state."""
         self.phase = "lobby"  # lobby, drawing, guessing, voting, results, final
-        self.players = {}  # {session_id: {name, score, likes, ready, color_index, prompt}}
+        self.players = {}  # {session_id: {name, emoji, score, likes, ready, color_index, prompt}}
         self.drawings = []  # [{player_id, prompt, image_data}]
         self.guesses = {}  # {drawing_index: [{player_id, guess}]}
         self.votes = {}  # {drawing_index: [{player_id, vote}]}
@@ -25,13 +25,14 @@ class GameState:
         self.round = 0
         self.continue_ready = set()  # Track which players have clicked continue
     
-    def add_player(self, session_id, name):
+    def add_player(self, session_id, name, emoji="😀"):
         """
         Add a new player to the game.
         
         Args:
             session_id: Unique session identifier
             name: Player's display name
+            emoji: Player's chosen emoji
         
         Returns:
             dict: Player data or None if game is full/started
@@ -47,6 +48,7 @@ class GameState:
         
         self.players[session_id] = {
             "name": name,
+            "emoji": emoji,
             "score": 0,
             "likes": 0,
             "ready": False,
